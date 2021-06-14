@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>浙江省高考志愿筛选小工具</title>
+  <script src="https://cdn.jsdelivr.net/npm/vue@2/dist/vue.js"></script>
+  <script src="./2020_data.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.1/css/bulma.min.css">
+</head>
+<body>
+  <style>
+    .heimu, .heimu a{
+        background-color: #252525;
+        color:#252525;
+        text-shadow: none;
+    }::selection{
+        background:#9ab0c0;
+        color:#fff;
+    }
+    .heimu:hover,.heimu:hover a{
+        transition:color .13s linear;
+        color:#fff;
+    }
+  </style>
+  <div id="app" class="columns is-centered">
+    <div class="column is-three-quarters is-full-mobile">
+      <section class="section">
+        <h1 class="title is-1" style="text-align: center;">浙江省高考志愿筛选小工具</h1>
+      </section>
+      <section>
+        <section class="section" style="margin-top: 0; padding-top: 0;">
+          <h3 class="title is-3">免责声明</h3>
+          <p class="is-size-5" style="color: red;">数据为浙江省教育考试院公布的 2020 招生计划和投档线</p>
+          <p class="is-size-5" style="color: red;">招生计划为“物化生”和“史地政”两表合成，不保证包括所有招生计划</p>
+          <p class="is-size-5">985 211 筛选时不会过滤各种分校区，请仔细区分</p>
+          <p class="is-size-5">分数线为 0 表示未在一段投档线找到对应分数</p>
+          <p class="is-size-5" style="color: red;">请审慎选择专业，本项目仅供参考</p>
+        </section>
+        <section class="section" style="margin-top: 0; padding-top: 0;">
+          <h3 class="title is-3">学校筛选</h3>
+          <label class="checkbox has-text-weight-bold	">
+            <input type="checkbox" v-model="need_985">
+            仅 985
+          </label>
+          <br>
+          <label class="checkbox has-text-weight-bold">
+            <input type="checkbox" v-model="need_211">
+            仅 211
+          </label>
+          <br>
+          <p>额外选校，不受上面的 985 211 条件约束。</p>
+          <p>多个学校请用逗号（全角、半角皆可）分隔。</p>
+          <input class="input" type="text" v-model="extra_college_string">
+        </section>
+
+        <section class="section" style="margin-top: 0; padding-top: 0; padding-bottom: 1em;">
+          <h3 class="title is-3">专业筛选</h3>
+            <div class="heimu">
+              <p>为什么专业不能直接用 Excel 筛选呢？</p>
+              <p>当然是因为大类招生还得看备注，Excel 复杂筛选不会写啊。</p>
+            </div>
+            <p>输入专业关键词，多个请用逗号（全角、半角皆可）分隔。</p>
+            <p>招生计划中“专业名称”和“备注”中只要有一个包含就会入选。</p>
+          <input class="input" type="text" v-model="keyword_string">
+        </section>
+
+        <section class="section" style="margin-top: 0; padding-top: 0; padding-bottom: 1em;">
+          <button class="button is-primary" v-on:click="calculate">计算</button>
+          <button class="button is-link" v-on:click="export_csv">导出 CSV（Excel 可打开）</button>
+          <br>
+          <table class="table is-fullwidth">
+            <thead>
+              <tr>
+                <th>院校名称</th>
+                <th>专业名称</th>
+                <th>分数线</th>
+                <th>省</th>
+                <th>城市</th>
+                <th>选考科目要求</th>
+                <th>备注</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="e in waitlist">
+                <td>{{ e["院校名称"] }}</td>
+                <td>{{ e["专业名称"] }}</td>
+                <td>{{ e["分数线"] }}</td>
+                <td>{{ e["省"] }}</td>
+                <td>{{ e["城市"] }}</td>
+                <td>{{ e["选考科目要求"] }}</td>
+                <td>{{ e["备注"] }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+      </section>
+    </div>
+  </div>
+  <footer class="footer">
+    <div class="container">
+      <div class="level">
+        <div class="level-start">
+          考试院给个机会，让我上一本
+        </div>
+        <div class="level-end">
+          <p><a href="https://github.com/Gesrua">Gesrua</a>@效实中学</p>
+          <p>贵校什么时候改成阳间食堂啊</p>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    function download(filename, text) {
+      var element = document.createElement('a');
+      element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text));
+      element.setAttribute('download', filename);
+
+      element.style.display = 'none';
+      document.body.appendChild(element);
+
+      element.click();
+
+      document.body.removeChild(element);
+    }
+    function string_split(s) {
+      return s.replace(/，/g, ',').split(',').map(x => x.trim()).filter(x => x != "");
+    }
+    _985 = ["清华大学", "厦门大学", "南京大学", "天津大学", "浙江大学", "西安交通大学", "东南大学", "上海交通大学", "山东大学", "中国人民大学", "吉林大学", "电子科技大学", "四川大学", "华南理工大学", "兰州大学", "西北工业大学", "同济大学", "北京大学", "中国科学技术大学", "复旦大学", "哈尔滨工业大学", "南开大学", "华中科技大学", "武汉大学", "中国海洋大学", "湖南大学", "北京理工大学", "重庆大学", "大连理工大学", "中山大学", "北京航空航天大学", "东北大学", "北京师范大学", "中南大学", "中国农业大学", "西北农林科技大学", "中央民族大学", "国防科技大学", "华东师范大学"]
+    _211 = ["清华大学", "北京大学", "中国人民大学", "北京交通大学", "北京工业大学", "北京航空航天大学", "北京理工大学", "北京科技大学", "北京化工大学", "北京邮电大学", "中国农业大学", "北京林业大学", "中国传媒大学", "中央民族大学", "北京师范大学", "中央音乐学院", "对外经济贸易大学", "北京中医药大学", "北京外国语大学", "中国地质大学", "中国矿业大学", "中国石油大学", "中国政法大学", "中央财经大学", "华北电力大学", "北京体育大学", "南开大学", "天津大学", "天津医科大学", "河北工业大学", "上海外国语大学", "复旦大学", "华东师范大学", "上海大学", "东华大学", "上海财经大学", "华东理工大学", "同济大学", "上海交通大学", "海军军医大学", "重庆大学", "西南大学", "华北电力大学", "太原理工大学", "内蒙古大学", "大连理工大学", "东北大学", "辽宁大学", "大连海事大学", "吉林大学", "东北师范大学", "延边大学", "哈尔滨工业大学", "哈尔滨工程大学", "东北农业大学", "东北林业大学", "南京大学", "东南大学", "苏州大学", "南京师范大学", "中国矿业大学", "中国药科大学", "河海大学", "南京理工大学", "江南大学", "南京农业大学", "南京航空航天大学", "浙江大学", "中国科学技术大学", "安徽大学", "合肥工业大学", "厦门大学", "福州大学", "南昌大学", "山东大学", "中国海洋大学", "中国石油大学", "郑州大学", "武汉大学", "华中科技大学", "武汉理工大学", "中南财经政法大学", "华中师范大学", "华中农业大学", "中国地质大学", "湖南大学", "中南大学", "湖南师范大学", "国防科技大学", "中山大学", "暨南大学", "华南理工大学", "华南师范大学", "广西大学", "四川大学", "电子科技大学", "西南交通大学", "西南财经大学", "四川农业大学", "云南大学", "贵州大学", "西北大学", "西安交通大学", "西北工业大学", "长安大学", "西北农林科技大学", "陕西师范大学", "西安电子科技大学", "空军军医大学", "兰州大学", "海南大学", "宁夏大学", "青海大学", "西藏大学", "新疆大学", "石河子大学"]
+    function is_985(s) {
+      for(let S of _985) {
+        if (s.startsWith(S)) {
+          return true
+        }
+      }
+      return false;
+    }
+    function is_211(s) {
+      for(let S of _211) {
+        if (s.startsWith(S)) {
+          return true
+        }
+      }
+      return false;
+    }
+    var app = new Vue({
+      el: '#app',
+      data: {
+        need_985: true,
+        need_211: true,
+        extra_college_string: "杭州电子科技大学",
+        keyword_string: "计算机，软件",
+        waitlist: []
+      },
+      computed: {
+        extra_college: function() {
+          return string_split(this.extra_college_string)
+        },
+        keyword: function() {
+          return string_split(this.keyword_string)
+        }
+      },
+      methods: {
+        college_filter: function(college) {
+          for(let s of this.extra_college)
+            if (college.includes(s))
+              return true;
+          
+          if (this.need_985) {
+            return is_985(college);
+          }
+          if (this.need_211) {
+            return is_211(college);
+          }
+
+          return true
+        },
+        keyword_filter: function(info) {
+          major = info["专业名称"];
+          note = info["备注"];
+          for(let s of this.keyword) {
+            if (major.includes(s) || note.includes(s)) return true;
+          }
+          return false;
+        },
+        filter: function(info){
+          return this.college_filter(info["院校名称"]) && this.keyword_filter(info)
+        },
+        calculate: function() {
+          _waitlist = []
+          window.DATA.filter(this.filter).forEach(e => _waitlist.push(e));
+          this.waitlist = _waitlist.sort((a, b) => b["分数线"] - a["分数线"]);
+        },
+        export_csv: function() {
+          this.calculate();
+          csv = "院校名称,专业名称,分数线,省,城市,选考科目要求,备注\n"
+          download("options.csv", csv + 
+            this.waitlist.map(e => `${e["院校名称"]},${e["专业名称"]},${e["分数线"]},${e["省"]},${e["城市"]},${e["选考科目要求"]},${e["备注"]}`).join("\n")
+          )
+        }
+      }
+    })
+  </script>
+</body>
+</html>
