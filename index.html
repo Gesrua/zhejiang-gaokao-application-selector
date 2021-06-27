@@ -74,6 +74,8 @@
                 <th>院校名称</th>
                 <th>专业名称</th>
                 <th>分数线</th>
+                <th>位次</th>
+                <th>计划数</th>
                 <th>省</th>
                 <th>城市</th>
                 <th>选考科目要求</th>
@@ -85,6 +87,8 @@
                 <td>{{ e["院校名称"] }}</td>
                 <td>{{ e["专业名称"] }}</td>
                 <td>{{ e["分数线"] }}</td>
+                <td>{{ e["位次"] }}</td>
+                <td>{{ e["计划数"] }}</td>
                 <td>{{ e["省"] }}</td>
                 <td>{{ e["城市"] }}</td>
                 <td>{{ e["选考科目要求"] }}</td>
@@ -178,7 +182,7 @@
         },
         keyword_filter: function(info) {
           major = info["专业名称"];
-          note = info["备注"];
+          note = info["备注"] || "";
           for(let s of this.keyword) {
             if (major.includes(s) || note.includes(s)) return true;
           }
@@ -194,9 +198,9 @@
         },
         export_csv: function() {
           this.calculate();
-          csv = "院校名称,专业名称,分数线,省,城市,选考科目要求,备注\n"
+          csv = "院校名称,专业名称,分数线,位次,计划数,省,城市,选考科目要求,备注\n"
           download("options.csv", csv + 
-            this.waitlist.map(e => `${e["院校名称"]},${e["专业名称"]},${e["分数线"]},${e["省"]},${e["城市"]},${e["选考科目要求"]},${e["备注"]}`).join("\n")
+            this.waitlist.map(e => `${e["院校名称"]},${e["专业名称"]},${e["分数线"]},${e["位次"]},${e["计划数"]},${e["省"]},${e["城市"]},${e["选考科目要求"]},${e["备注"]}`).join("\n")
           )
         }
       }
